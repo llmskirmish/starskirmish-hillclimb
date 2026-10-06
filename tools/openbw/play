@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+# Play two bot modules against each other in vanilla OpenBW: two BWAPILauncher processes join one
+# LAN game over OpenBW's local sockets, as Protoss on the given map. Headless, at full speed.
+#   tools/openbw/play BWAPI_SRC BWAPI_BUILD MPQ_DIR MAP BOT1.so BOT2.so
+# MPQ_DIR holds StarDat.mpq, BrooDat.mpq and Patch_rt.mpq. Logs and the replay go to build/games/<time>/.
+set -euo pipefail
+[ $# -ge 6 ] || { sed -n '2,5p' "$0"; exit 2; }
+root=$(cd "$(dirname "$0")/../.." && pwd)
+src=$(cd "$1" && pwd); bld=$(cd "$2" && pwd); mpq=$(cd "$3" && pwd)
+map=$(cd "$(dirname "$4")" && pwd)/$(basename "$4")
+bots=("$(cd "$(dirname "$5")" && pwd)/$(basename "$5")" "$(cd "$(dirname "$6")" && pwd)/$(basename "$6")")
+game=$root/build/games/$(date +%Y%m%d-%H%M%S)
+export LD_LIBRARY_PATH=$bld/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH} OPENBW_MPQ_PATH=$mpq
+# The launchers find each other through sockets in one directory; socket paths must stay short (about 100 bytes).
+sockets=$(mktemp -d /tmp/openbw.XXXXXX); trap 'rm -rf "$sockets"' EXIT
+export OPENBW_LAN_MODE=LOCAL_AUTO OPENBW_LOCAL_AUTO_DIRECTORY=$sockets
+export BWAPI_CONFIG_AUTO_MENU__AUTO_MENU=LAN BWAPI_CONFIG_AUTO_MENU__MAP=$map BWAPI_CONFIG_AUTO_MENU__RACE=Protoss
+export BWAPI_CONFIG_AUTO_MENU__GAME_TYPE=MELEE BWAPI_CONFIG_AUTO_MENU__AUTO_RESTART=OFF
+export BWAPI_CONFIG_STARCRAFT__SPEED_OVERRIDE=0 BWAPI_CONFIG_STARCRAFT__SOUND=OFF
+pids=()
+for i in 0 1; do
+  dir=$game/player$((i + 1)); mkdir -p "$dir/bwapi-data"; cp "$src/bwapi.ini.example" "$dir/bwapi-data/bwapi.ini"
+  replay=; [ $i = 0 ] && replay=$game/game.rep
+  (cd "$dir" && BWAPI_CONFIG_AI__AI=${bots[$i]} BWAPI_CONFIG_AUTO_MENU__CHARACTER_NAME=player$((i + 1)) \
+     BWAPI_CONFIG_AUTO_MENU__SAVE_REPLAY=$replay exec "$bld/bin/BWAPILauncher" > "$game/player$((i + 1)).log" 2>&1) &
+  pids+=($!)
+  sleep 2  # the first launcher creates the game, the second joins it
+done
+wait "${pids[@]}" || true
+for i in 1 2; do echo "== player$i: $(basename "${bots[$((i - 1))]}")"; tail -3 "$game/player$i.log"; done
+echo "logs and replay: $game"

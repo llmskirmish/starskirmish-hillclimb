@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+# Diff two bot versions of one agent.
+#   tools/vdiff DIR N          version N against the version before it
+#   tools/vdiff DIR A B        version A against version B
+#   add --format to reformat both sides with clang-format first (.clang-format at the repo root),
+#   which makes dense one-line code readable; add --stat for a per-file summary.
+# DIR is an agent folder, hillclimb/gpt-6-astra or hillclimb/claude-opus-5-5. N, A, B are folder numbers.
+set -euo pipefail
+fmt=0; extra=()
+args=()
+for a in "$@"; do
+  case "$a" in --format) fmt=1 ;; --stat|--word-diff|--name-only) extra+=("$a") ;; *) args+=("$a") ;; esac
+done
+[ ${#args[@]} -ge 2 ] || { sed -n '2,7p' "$0"; exit 2; }
+root=$(cd "$(dirname "$0")/.." && pwd); dir=${args[0]%/}
+pick() { local m; m=$(ls -d "$root/$dir"/"$((10#$1))"_* 2>/dev/null | head -1); [ -n "$m" ] || { echo "no version $1 in $dir" >&2; exit 1; }; echo "$m"; }
+if [ ${#args[@]} -ge 3 ]; then a=$(pick "${args[1]}"); b=$(pick "${args[2]}"); else b=$(pick "${args[1]}"); a=$(pick "$((10#${args[1]} - 1))"); fi
+echo "--- $(basename "$a")"; echo "+++ $(basename "$b")"
+if [ $fmt = 1 ]; then
+  t=$(mktemp -d); trap 'rm -rf "$t"' EXIT
+  mkdir -p "$t/old" "$t/new"; cp "$a"/src/* "$t/old/"; cp "$b"/src/* "$t/new/"; cp "$root/.clang-format" "$t/"
+  clang-format -i "$t"/old/* "$t"/new/*
+  cd "$t"; git diff --no-index ${extra[@]+"${extra[@]}"} old new || true
+else
+  git diff --no-index ${extra[@]+"${extra[@]}"} "$a/src" "$b/src" || true
+fi

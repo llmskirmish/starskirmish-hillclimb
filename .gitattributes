@@ -1,0 +1,3 @@
+*.cpp diff=cpp
+*.h   diff=cpp
+*.hpp diff=cpp

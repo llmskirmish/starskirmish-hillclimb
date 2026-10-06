@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+# Build one bot version as a BWAPI AI module (a .so) that vanilla OpenBW's BWAPILauncher can load.
+#   tools/openbw/build VERSION_DIR BWAPI_SRC BWAPI_BUILD [OUT.so]
+# VERSION_DIR is a version folder, e.g. hillclimb/gpt-6-astra/5_tier-S_10F-Consistent-Worker-Militia.
+# BWAPI_SRC is a checkout of github.com/OpenBW/bwapi (branch develop-openbw); BWAPI_BUILD is its CMake build folder.
+# OUT defaults to build/<agent>-<N>.so. CXX picks the compiler (default c++). BWEM is built once into build/bwem.
+set -euo pipefail
+[ $# -ge 3 ] || { sed -n '2,6p' "$0"; exit 2; }
+root=$(cd "$(dirname "$0")/../.." && pwd)
+version=$(cd "$1" && pwd); src=$(cd "$2" && pwd); bld=$(cd "$3" && pwd)
+out=${4:-$root/build/$(basename "$(dirname "$version")")-$(basename "$version" | cut -d_ -f1).so}
+cxx=${CXX:-c++}
+# -include cstdint: vanilla BWAPI's Game.h uses uint32_t without including <cstdint>, which newer compilers reject.
+flags=(-std=c++20 -O2 -fPIC -w -include cstdint -I "$src/bwapi/include"
+       -isystem "$root/libs/fap/FAP/include" -isystem "$root/libs/bwem/BWEM/include")
+bwem=$root/build/bwem
+if [ ! -f "$bwem/libBWEM.a" ]; then
+  mkdir -p "$bwem"
+  for f in "$root"/libs/bwem/BWEM/src/*.cpp; do "$cxx" "${flags[@]}" -c "$f" -o "$bwem/$(basename "$f" .cpp).o"; done
+  ar rcs "$bwem/libBWEM.a" "$bwem"/*.o
+fi
+mkdir -p "$(dirname "$out")"
+"$cxx" "${flags[@]}" -shared -I "$version/src" "$version"/src/*.cpp "$root/tools/openbw/module.cpp" \
+  -L "$bwem" -lBWEM -L "$bld/lib" -lBWAPILIB -o "$out"
+echo "$out"
