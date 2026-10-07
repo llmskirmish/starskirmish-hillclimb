@@ -28,16 +28,15 @@ Each version folder is named `<N>_tier-<T>_<version>-<description>`, where `N` o
 - `src/`: the bot source. File names are the same in every version of an agent, so folders diff file by file.
 - `VERSION.md`: the clearing result, when it was submitted, lines of code, and a one-line summary of every graded version since the agent's previous clear.
 
+Astra wrote very dense code, many statements to a line, so its sources here have been run through clang-format (LLVM style, 100 columns, from `.clang-format`). The tier S clear goes from 1,227 non-blank lines to 3,662. Only whitespace, line breaks, include order and closing namespace comments changed, and each version builds a byte-identical binary to the code as graded.
+
 ## Diffing versions
 
 ```bash
 tools/vdiff hillclimb/gpt-6-astra 5              # tier S clear against the tier A clear
 tools/vdiff hillclimb/gpt-6-astra 1 5            # tier D clear against the tier S clear
 tools/vdiff hillclimb/claude-opus-5-5 3 --stat   # per-file summary
-tools/vdiff hillclimb/gpt-6-astra 5 --format     # reformat both sides first
 ```
-
-`--format` runs clang-format (LLVM style, 100 columns, from `.clang-format`) on temporary copies of both sides. Astra writes dense, many-statements-per-line code, so its diffs are much easier to read formatted. Install clang-format with `brew install clang-format` or `pip install clang-format`.
 
 Plain git works too:
 
