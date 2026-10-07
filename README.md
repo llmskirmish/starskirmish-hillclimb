@@ -30,6 +30,10 @@ Each version folder is named `<N>_tier-<T>_<version>-<description>`, where `N` o
 
 Astra wrote very dense code, many statements to a line, so its sources here have been run through clang-format (LLVM style, 100 columns, from `.clang-format`). The tier S clear goes from 1,227 non-blank lines to 3,662. Only whitespace, line breaks, include order and closing namespace comments changed, and each version builds a byte-identical binary to the code as graded.
 
+## Replays
+
+The graded games of each version are a release download, one zip per agent: [Replays](https://github.com/llmskirmish/starskirmish-hillclimb/releases/tag/replays). Their folders mirror `hillclimb/`, with 60 games in each: both opponents for tiers A and S, 2 of the 3 opponents for tiers D, C and B.
+
 ## Diffing versions
 
 ```bash
