@@ -1,6 +1,6 @@
 # starskirmish-hillclimb
 
-The 8 bot versions that cleared a tier in the StarSkirmish hillclimb that started Oct 2nd 2026, as source: 5 from GPT-6 Astra and 3 from Claude Opus 5.5.
+The 8 bot versions that cleared a tier in the StarSkirmish hillclimb that started Oct 2nd 2026, as source: 5 from GPT-6 Astra and 3 from Claude Opus 5.5. Also Claude Opus 5.5's best tier A submission, which did not clear.
 
 Each tier is a set of opponent bots played on 3 maps, 10 games per map and opponent: 90 games for tiers D, C and B (3 opponents), 60 for A and S (2 opponents). A submission clears the tier when, on every map, it wins at least 5 of the 10 games against each opponent and at least one more than that in total: 16 of 30 on a 3-opponent map, 11 of 20 on a 2-opponent map.
 
@@ -9,24 +9,24 @@ Each tier is a set of opponent bots played on 3 maps, 10 games per map and oppon
 | D | 1A Gateway Dragoon Baseline: 90/90, 1st submission, 4 minutes in | 1A Gateway FAP Baseline: 90/90, 1st submission, 41 minutes in |
 | C | 2B One Gate Rally: 76/90, 2nd submission, 19 minutes in | 1E Second Scout Safe Natural: 77/90, 4th submission, 3.4 hours in |
 | B | 3A Dark Templar Reavers: 83/90, 2nd submission, 39 minutes in | 2B Kill Adjusted Attacks: 74/90, 6th submission, 15.5 hours in |
-| A | 5H Forward Regroup Routing: 41/60, 12th submission, 7.5 hours in | not cleared in 6 submissions |
+| A | 5H Forward Regroup Routing: 41/60, 12th submission, 7.5 hours in | not cleared in 6 submissions; best was 3E Forge Cannon Insurance: 27/60, 6th submission, 47.5 hours in |
 | S | 10F Consistent Worker Militia: 41/60, 29th submission, 40.8 hours in | not reached |
 
-"Nth submission" counts that agent's submissions at that tier, up to and including the one that cleared.
+"Nth submission" counts that agent's submissions at that tier, up to and including that one.
 
 ## Layout
 
 ```
 hillclimb/gpt-6-astra/       GPT-6 Astra: 1_tier-D_... to 5_tier-S_...
-hillclimb/claude-opus-5-5/   Claude Opus 5.5: 1_tier-D_... to 3_tier-B_...
+hillclimb/claude-opus-5-5/   Claude Opus 5.5: 1_tier-D_... to 3_tier-B_..., and 4_tier-A_..., which did not clear
 libs/                        FAP and BWEM, the two libraries the bots build against
 tools/                       vdiff, the diff helper; openbw/, the shim and scripts to run the bots in vanilla OpenBW
 ```
 
-Each version folder is named `<N>_tier-<T>_<version>-<description>`, where `N` orders the agent's clears and `<version>` is the agent's own version number (the number goes up when at least 10% of the code changed from the previous graded version, the letter for smaller changes). Inside:
+Each version folder is named `<N>_tier-<T>_<version>-<description>`, where `N` orders the agent's versions and `<version>` is the agent's own version number (the number goes up when at least 10% of the code changed from the previous graded version, the letter for smaller changes). Inside:
 
 - `src/`: the bot source. File names are the same in every version of an agent, so folders diff file by file.
-- `VERSION.md`: the clearing result, when it was submitted, lines of code, and a one-line summary of every graded version since the agent's previous clear.
+- `VERSION.md`: the clearing (or best) result, when it was submitted, lines of code, and a one-line summary of every graded version since the agent's previous clear.
 
 Astra wrote very dense code, many statements to a line, so its sources here have been run through clang-format (LLVM style, 100 columns, from `.clang-format`). The tier S clear goes from 1,227 non-blank lines to 3,662. Only whitespace, line breaks, include order and closing namespace comments changed, and each version builds a byte-identical binary to the code as graded.
 
